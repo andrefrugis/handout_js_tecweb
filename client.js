@@ -70,6 +70,7 @@ async function main(){
             else{
                 resposta = 1;
             }
+        console.log(resposta);
         } else if (data[dic].titulo === "Ano bissexto") {
             i ++;
             let {ano} = data[dic].entrada;    
@@ -84,7 +85,6 @@ async function main(){
             let raio = data[dic].entrada.z;
             let altura = data[dic].entrada.a;
             resposta = Math.round(Math.PI * raio ** 2 * altura);
-            console.log(resposta);
         } else if (data[dic].titulo === "Movimento retilíneo uniforme") {
             i ++;
             let {s0, v, t} = data[dic].entrada;
@@ -158,41 +158,33 @@ async function main(){
             resposta = strings.reduce((acc, curr) => acc + Number(curr), 0);
         } else if (data[dic].titulo === 'Soma com requisições') {
             let endpoints = data[dic].entrada.endpoints;
-            let soma = 0;
             i++;
+            let soma = 0;
             // Utilizando Promise.all para lidar com várias promessas de requisição
-            Promise.all(endpoints.map(url => axios.get(url, config2)))
-                .then(responses => {
-                    // Somando os valores obtidos de cada endpoint
-                    for (let response of responses) {
-                        soma += response.data; // Assumindo que cada endpoint retorna diretamente um número
-                    }
-                })
+            const responses = await Promise.all(endpoints.map(url => axios.get(url, config2)));
+            soma = responses.reduce((acc, response) => acc + response.data, 0);
             resposta = soma;
-        }
-        else if (data[dic].titulo === 'Caça ao tesouro') {
+        } else if (data[dic].titulo === 'Caça ao tesouro') {
             i++;
             let inicio = data[dic].entrada.inicio;
             async function buscaTesouro(url){
                 let response = await axios.get(url, config2);
                 if ( typeof response.data === "number"){
                     return response.data;
-                }
+                }   
                 else {
-                    return await buscaTesouro(response.data)
+                    return await buscaTesouro(response.data);
                 }
             }
             resposta = await buscaTesouro(inicio);
         }
-        
-        
+
         // Verifique se a resposta foi definida antes de fazer a requisição POST
         if (resposta !== undefined) {
             axios.post(`https://tecweb-js.insper-comp.com.br/exercicio/${dic}`, {"resposta": resposta}, config2)
                   .then((response) => console.log(response.data));
         }
     }
-    console.log(i);    
 }
 
 main(
